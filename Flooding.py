@@ -104,6 +104,9 @@ node = Nodo(nombre, vecinos)
 opcion = 0
 Flooding = Flooding()
 
+
+print("\n Nodo", node.nombre, " listo para transmitir!\n")
+
 while opcion != 3:
     print("1. Enviar mensaje")
     print("2. Recibir mensaje")

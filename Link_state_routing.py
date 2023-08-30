@@ -140,7 +140,8 @@ for nodo in nodos:
 
 print("\nTopologia de la red")
 lsr.ver_topologia()
-print()
+
+print("\n Nodo", actual.nombre, " listo para transmitir!\n")
 
 opcion = 0
 while opcion != 3:
