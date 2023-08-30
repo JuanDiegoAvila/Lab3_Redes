@@ -1,28 +1,88 @@
 import ast
 
 class Router:
-    def __init__(self, name, neighbors):
+    def __init__(self, name, neighbors, total_vecinos):
         self.name = name
+        self.todos_vecinos = total_vecinos
         self.neighbors = neighbors
-        self.routing_table = {name: (0 if name == self.name else float('inf'), self.name) for name in neighbors}
-    
-    def update_routing_table(self, neighbor_name, neighbor_routing_table):
-        for dest, (cost, source) in neighbor_routing_table.items():
-            if dest in self.routing_table:
-                if self.routing_table[dest][0] > cost:
-                    self.routing_table[dest] = (cost, neighbor_name)
-            else:
-                self.routing_table[dest] = (cost, neighbor_name)
-    
-    def print_routing_table(self):
-        print(f"Routing table of {self.name}:")
-        for dest, (cost, source) in self.routing_table.items():
-            print(f"Destination: {dest}, Cost: {cost}, Source: {source}")
+
+        self.diccionario_principal = {
+            nombre: [[vecino, self.neighbors.get(vecino, 0)] for vecino in self.todos_vecinos]
+        }
+
+    def actualizar_ruta(self, diccionario_vecino):
+        nodo1 = self.name
+        nodo2 = list(diccionario_vecino.keys())[0]
+
+        distancia_nodo1_a_nodo2 = [v[1] for v in self.diccionario_principal[nodo1] if v[0] == nodo2][0]
+        actualizados = False
+
+        for vecino in diccionario_vecino[nodo2]:
+            nombre_vecino, distancia_nodo2_a_vecino = vecino
+            if nombre_vecino != nodo1:  # No queremos comparar el nodo original con sí mismo
+
+                distancia_total = distancia_nodo1_a_nodo2 + distancia_nodo2_a_vecino
+                
+                vecinos_actuales = {v[0]: v[1] for v in self.diccionario_principal[nodo1]}
+                
+                # Si el vecino no está en el diccionario original o si la nueva distancia es menor
+                if distancia_total < vecinos_actuales[nombre_vecino] or vecinos_actuales[nombre_vecino] == 0:
+                    if nombre_vecino in vecinos_actuales:
+                        # Encuentra y actualiza la distancia en el diccionario
+                        for v in self.diccionario_principal[nodo1]:
+                            if v[0] == nombre_vecino:
+                                actualizados = True
+                                v[1] = distancia_total
         
-        # Print the routing table in dictionary format
-        print("Routing table as dictionary:", self.routing_table)
+        if not actualizados:
+            print("Ya no se pueden actualizar las rutas")
+
+    def imprimir_tabla(self):
+
+        print("=" * 30)
+
+        print(f'Nombre: {self.name}')
+        print('Vecino | Valor')
+        print('----------------')
+        
+        for vecino, valor in self.diccionario_principal[self.name]:
+            print(f'{vecino:^7} | {valor:^5}')
+
+        print(self.diccionario_principal)
+
+        print("=" * 30)
+
+    def enviar_mensaje(self, tipo, saltos, origen, mensaje, destino, intermediario):
+        
+        origen_ = None
+        if type(origen).__name__ == "Nodo":
+            origen_ = origen.nombre
+        else:
+            origen_ = origen
+            origen = intermediario.nombre
+
+        
+
+        camino = self.calcular_ruta(origen, destino)
+        next = camino[1]
+
+        print("\n Enviar este paquete a :", next)
+
+        paquete = {
+            "type": tipo, 
+            "headers": {
+                "from": origen_, 
+                "to": destino,
+                "hop_count": saltos
+            }, 
+            "payload": mensaje
+        }
+
+        print(paquete)
+
 
 nombre = input("Ingrese el nombre del nodo: ")
+total_vecinos = input("Ingrese todos los nodos de la topología: ")
 vecinos = {}
 
 finished = False
@@ -31,17 +91,22 @@ while not finished:
     vecino_distancia = int(input("Ingrese la distancia de dicho vecino: "))
     vecinos[vecino_nombre] = vecino_distancia
     continuar = input("Desea ingresar otro vecino [si/no]: ")
+    
     if continuar == "no":
         finished = True
 
-router = Router(nombre, vecinos)
+print(vecinos)
+
+router = Router(nombre, vecinos, total_vecinos)
 
 opcion = 0
 
-while opcion != 3:
+while opcion != 5:
     print("1. Enviar mensaje")
     print("2. Recibir mensaje")
-    print("3. Salir")
+    print("3. Ver tabla de ruteo")
+    print("4. Actualizar tabla de ruteo")
+    print("5. Salir")
     opcion = int(input("Ingrese una opcion: "))
 
     if opcion == 1:
@@ -68,15 +133,15 @@ while opcion != 3:
         intermediarios = intermediarios.split(",")
         saltos = int(input("Ingrese la cantidad de saltos: "))
     
-    # elif opcion == 3:
-    #     router.print_routing_table()
+    elif opcion == 3:
+        router.imprimir_tabla()
 
-    # elif opcion == 4:
-    #     vecino_nombre = input("Ingrese el nombre del nodo de la tabla: ")
-    #     vecino_distancia = ast.literal_eval(input("Ingrese la tabla de dicho nodo: "))
+    elif opcion == 4:
+        vecino_nombre = input("Ingrese el nombre del nodo de la tabla: ")
+        vecino_distancia = ast.literal_eval(input("Ingrese la tabla de dicho nodo: "))
 
-    #     print(vecino_distancia)
-    #     router.update_routing_table(vecino_nombre, vecino_distancia)
+        print(vecino_distancia)
+        router.actualizar_ruta(vecino_distancia)
 
 
 
