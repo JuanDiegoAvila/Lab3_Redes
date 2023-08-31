@@ -19,7 +19,6 @@ class Router:
                 if vecino[0] != nodo and vecino[0] not in self.neighbors.keys():
                     self.camino[vecino[0]] = ""
                     
-
     def actualizar_ruta(self, diccionario_vecino):
         nodo1 = self.name
         nodo2 = list(diccionario_vecino.keys())[0]  # Suponemos que diccionario_vecino solo tiene una entrada
@@ -63,11 +62,6 @@ class Router:
         if not actualizados:
             print("No hubo cambios en las rutas")
 
-
-
-
-
-
     def imprimir_tabla(self):
         print(self.camino)
 
@@ -84,33 +78,41 @@ class Router:
 
         print("=" * 30)
 
-    def enviar_mensaje(self, tipo, saltos, origen, mensaje, destino, intermediario):
-        
-        origen_ = None
-        if type(origen).__name__ == "Nodo":
-            origen_ = origen.nombre
+    def enviar_mensaje(self, tipo, saltos, origen, mensaje, destino):
+        enviado = True
+
+        while enviado :
+
+            if destino in self.neighbors.keys():
+                enviado = False
+
+                print("Enviar este paquete a :", destino)
+
+                paquete = {
+                    "type": tipo, 
+                    "headers": {
+                        "from": origen, 
+                        "to": destino,
+                        "hop_count": saltos
+                    }, 
+                    "payload": mensaje
+                }
+
+                print(paquete)
+
+            else:
+                destino = self.camino[destino]
+
+    def recibir_mensaje(self, receptor, mensaje, tipo, saltos, emisor):
+        if saltos > 0 and receptor != self.name:
+           saltos = saltos - 1
+
+           self.enviar_mensaje(tipo, saltos, emisor, mensaje, receptor)
+
+            
         else:
-            origen_ = origen
-            origen = intermediario.nombre
-
-        
-
-        camino = self.calcular_ruta(origen, destino)
-        next = camino[1]
-
-        print("\n Enviar este paquete a :", next)
-
-        paquete = {
-            "type": tipo, 
-            "headers": {
-                "from": origen_, 
-                "to": destino,
-                "hop_count": saltos
-            }, 
-            "payload": mensaje
-        }
-
-        print(paquete)
+            print("\nMensaje recibido")
+            print(mensaje)
 
 
 nombre = input("Ingrese el nombre del nodo: ")
@@ -150,8 +152,9 @@ while opcion != 5:
             pass
         elif tipo == "info":
             cantidad_nodes = int(input("Ingrese la cantidad de nodos: "))
-            
 
+        router.enviar_mensaje(tipo, saltos, nombre, mensaje, receptor)
+            
         
     elif opcion == 2:
 
@@ -159,9 +162,9 @@ while opcion != 5:
         receptor = input("Ingrese el nombre del receptor: ")
         mensaje = input("Ingrese el mensaje: ")
         tipo = input("Ingrese el tipo de mensaje: ")
-        intermediarios = input("Ingrese los intermediarios: ")
-        intermediarios = intermediarios.split(",")
         saltos = int(input("Ingrese la cantidad de saltos: "))
+
+        router.recibir_mensaje(receptor, mensaje, tipo, saltos, emisor)
     
     elif opcion == 3:
         router.imprimir_tabla()
