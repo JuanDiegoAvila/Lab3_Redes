@@ -13,3 +13,5 @@ Para ejecutar los algoritmos:
 ```console
   python Link_state_routing.py
 ```
+
+Para probarlo se debe ejecutar el programa en una terminal diferente por cada nodo que se desea crear.
