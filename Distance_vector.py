@@ -10,34 +10,66 @@ class Router:
             nombre: [[vecino, self.neighbors.get(vecino, 0)] for vecino in self.todos_vecinos]
         }
 
+        self.getCamino()
+
+    def getCamino(self):
+        self.camino = {}
+        for nodo in self.diccionario_principal:
+            for vecino in self.diccionario_principal[nodo]:
+                if vecino[0] != nodo and vecino[0] not in self.neighbors.keys():
+                    self.camino[vecino[0]] = ""
+                    
+
     def actualizar_ruta(self, diccionario_vecino):
         nodo1 = self.name
-        nodo2 = list(diccionario_vecino.keys())[0]
+        nodo2 = list(diccionario_vecino.keys())[0]  # Suponemos que diccionario_vecino solo tiene una entrada
 
-        distancia_nodo1_a_nodo2 = [v[1] for v in self.diccionario_principal[nodo1] if v[0] == nodo2][0]
+        # Obtener la distancia de nodo1 a nodo2
+        distancia_nodo1_a_nodo2 = next((v[1] for v in self.diccionario_principal[nodo1] if v[0] == nodo2), 0)
+
+        # Si no hay conexión, entonces no actualizamos
+        if distancia_nodo1_a_nodo2 == 0:
+            print("No hubo cambios en las rutas")
+            return
+
         actualizados = False
 
         for vecino in diccionario_vecino[nodo2]:
             nombre_vecino, distancia_nodo2_a_vecino = vecino
-            if nombre_vecino != nodo1:  # No queremos comparar el nodo original con sí mismo
 
-                distancia_total = distancia_nodo1_a_nodo2 + distancia_nodo2_a_vecino
-                
-                vecinos_actuales = {v[0]: v[1] for v in self.diccionario_principal[nodo1]}
-                
-                # Si el vecino no está en el diccionario original o si la nueva distancia es menor
-                if distancia_total < vecinos_actuales[nombre_vecino] or vecinos_actuales[nombre_vecino] == 0:
-                    if nombre_vecino in vecinos_actuales:
-                        # Encuentra y actualiza la distancia en el diccionario
-                        for v in self.diccionario_principal[nodo1]:
-                            if v[0] == nombre_vecino:
-                                actualizados = True
-                                v[1] = distancia_total
-        
+            # Si el vecino es el mismo nodo o no hay conexión directa con el vecino, continuamos sin hacer nada
+            if nombre_vecino == nodo1 or distancia_nodo2_a_vecino == 0:
+                continue
+
+            distancia_total = distancia_nodo1_a_nodo2 + distancia_nodo2_a_vecino
+
+            # Obtener la distancia actual desde nodo1 al nombre_vecino
+            distancia_actual_a_vecino = next((v[1] for v in self.diccionario_principal[nodo1] if v[0] == nombre_vecino), 0)
+
+            # Si la distancia total es menor a la distancia actual registrada, o si no hay una ruta existente (distancia 0), actualizamos
+            if (distancia_actual_a_vecino == 0) or (distancia_total < distancia_actual_a_vecino):
+                for v in self.diccionario_principal[nodo1]:
+                    if v[0] == nombre_vecino:
+                        v[1] = distancia_total
+                        actualizados = True
+                        self.camino[nombre_vecino] = nodo2
+                        break
+                else:
+                    # Si el nodo vecino no estaba en el diccionario del nodo1, lo añadimos
+                    self.diccionario_principal[nodo1].append([nombre_vecino, distancia_total])
+                    actualizados = True
+                    self.camino[nombre_vecino] = nodo2
+
         if not actualizados:
-            print("Ya no se pueden actualizar las rutas")
+            print("No hubo cambios en las rutas")
+
+
+
+
+
 
     def imprimir_tabla(self):
+        print(self.camino)
 
         print("=" * 30)
 
@@ -94,8 +126,6 @@ while not finished:
     
     if continuar == "no":
         finished = True
-
-print(vecinos)
 
 router = Router(nombre, vecinos, total_vecinos)
 
